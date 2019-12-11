@@ -1,0 +1,54 @@
+steps:
+  # BUILDING CONTAINER IMAGE
+  - id: 'building hello-world app'
+    name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t',
+      'gcr.io/$PROJECT_ID/hello-world:$BRANCH_NAME-$COMMIT_SHA',
+      '-t',
+      'gcr.io/$PROJECT_ID/hello-world:latest',
+      './apps/hello-world'
+    ]
+    waitFor: ['-']
+
+
+  # PUSHING IMAGES TO GCR
+  - id: 'pushing hello-world app image'
+    name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push',
+      'gcr.io/$PROJECT_ID/hello-world:$BRANCH_NAME-$COMMIT_SHA'
+    ]
+    waitFor: ['building hello-world app']
+
+  - id: 'pushing hello-world app latest image'
+    name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push',
+      'gcr.io/$PROJECT_ID/hello-world:latest'
+    ]
+    waitFor: ['building hello-world app']
+
+
+  # GENERATING deployment.yaml FROM TEMPLATE
+  - id: 'make deployment file'
+    name: 'ubuntu'
+    args: [
+      'bash',
+      '-c',
+      'sed "s/__PROJECT_ID_HERE__/$PROJECT_ID/g" ./deployment.yaml'
+    ]
+    waitFor: ['-']
+
+
+  # DEPLOYMENT PHASE
+  - id: 'deploying'
+    name: 'gcr.io/cloud-builders/kubectl'
+    args: ['apply', '-f', 'k8s/']
+    waitFor: ['make deployment file', 'pushing hello-world app image', 'pushing hello-world app latest image']
+
+images: [
+  'gcr.io/$PROJECT_ID/hello-world:$BRANCH_NAME-$COMMIT_SHA',
+  'gcr.io/$PROJECT_ID/hello-world:latest'
+]
