@@ -33,7 +33,7 @@ steps:
 
   # GENERATING deployment.yaml FROM TEMPLATE
   - id: 'make deployment file'
-    name: 'busybox'
+    name: 'debian'
     args: [
       'bash',
       '-c',
