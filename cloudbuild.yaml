@@ -33,7 +33,7 @@ steps:
 
   # GENERATING deployment.yaml FROM TEMPLATE
   - id: 'make deployment file'
-    name: 'debian'
+    name: 'marketplace.gcr.io/google/ubuntu'
     args: [
       'bash',
       '-c',
